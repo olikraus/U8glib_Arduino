@@ -39,7 +39,7 @@
 #define _CPP_U8GLIB
 
 #include <Print.h>
-#include "utility/u8g.h"
+#include "clib/u8g.h"
 
 
 class U8GLIB : public Print
@@ -715,7 +715,7 @@ class U8GLIB_LC7981_240X128 : public U8GLIB
       { }
 };
 
-// 16 bit mode required: Remove comment from "#define U8G_16BIT 1" in utility/utility/u8g.h
+// 16 bit mode required: Remove comment from "#define U8G_16BIT 1" in utility/clib/u8g.h
 class U8GLIB_LC7981_320X64 : public U8GLIB 
 {
   public:
@@ -965,6 +965,34 @@ class U8GLIB_SSD1306_128X32_2X : public U8GLIB
       { }
     U8GLIB_SSD1306_128X32_2X(uint8_t options = U8G_I2C_OPT_NONE) 
       : U8GLIB(&u8g_dev_ssd1306_128x32_2x_i2c, options)
+      { }
+};
+
+class U8GLIB_SSD1306_64X48 : public U8GLIB 
+{
+  public:
+    U8GLIB_SSD1306_64X48(uint8_t sck, uint8_t mosi, uint8_t cs, uint8_t a0, uint8_t reset = U8G_PIN_NONE) 
+      : U8GLIB(&u8g_dev_ssd1306_64x48_sw_spi, sck, mosi, cs, a0, reset)
+      { }
+    U8GLIB_SSD1306_64X48(uint8_t cs, uint8_t a0, uint8_t reset = U8G_PIN_NONE) 
+      : U8GLIB(&u8g_dev_ssd1306_64x48_hw_spi, cs, a0, reset)
+      { }
+    U8GLIB_SSD1306_64X48(uint8_t options = U8G_I2C_OPT_NONE) 
+      : U8GLIB(&u8g_dev_ssd1306_64x48_i2c, options)
+      { }
+};
+
+class U8GLIB_SSD1306_64X48_2X : public U8GLIB 
+{
+  public:
+    U8GLIB_SSD1306_64X48_2X(uint8_t sck, uint8_t mosi, uint8_t cs, uint8_t a0, uint8_t reset = U8G_PIN_NONE) 
+      : U8GLIB(&u8g_dev_ssd1306_64x48_2x_sw_spi, sck, mosi, cs, a0, reset)
+      { }
+    U8GLIB_SSD1306_64X48_2X(uint8_t cs, uint8_t a0, uint8_t reset = U8G_PIN_NONE) 
+      : U8GLIB(&u8g_dev_ssd1306_64x48_2x_hw_spi, cs, a0, reset)
+      { }
+    U8GLIB_SSD1306_64X48_2X(uint8_t options = U8G_I2C_OPT_NONE) 
+      : U8GLIB(&u8g_dev_ssd1306_64x48_2x_i2c, options)
       { }
 };
 
