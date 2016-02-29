@@ -674,7 +674,7 @@ static void twi_delay(unsigned char v){
 static bool twi_write_start(void) {
   SCL_HIGH();
   SDA_HIGH();
-  if (SDA_READ() == 0) return false;
+  if (SDA_READ() == 0 && !(u8g_i2c_opt & U8G_I2C_OPT_NO_ACK)) return false;
   twi_delay(twi_dcount);
   SDA_LOW();
   twi_delay(twi_dcount);
