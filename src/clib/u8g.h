@@ -50,6 +50,8 @@ typedef unsigned char uint8_t;
 typedef signed char int8_t;
 typedef unsigned short uint16_t;
 typedef signed short int16_t;
+#elif defined(__XTENSA__)
+#include <c_types.h>
 #else
 #include <stdint.h>
 #endif
@@ -121,6 +123,14 @@ typedef uint8_t u8g_fntpgm_uint8_t;
 #define u8g_pgm_read(adr) pgm_read_byte_near(adr)
 #define U8G_PSTR(s) ((u8g_pgm_uint8_t *)PSTR(s))
 
+#elif defined(__XTENSA__)
+//#include <pgmspace.h>  // Can't include this, it's C++-only
+#define U8G_PROGMEM ICACHE_RODATA_ATTR
+#define PROGMEM ICACHE_RODATA_ATTR
+typedef uint8_t u8g_pgm_uint8_t;
+typedef uint8_t u8g_fntpgm_uint8_t;
+#define u8g_pgm_read(adr) (*(const u8g_pgm_uint8_t *)(adr))
+#define U8G_PSTR(s) ((u8g_pgm_uint8_t *)(s))
 #else
 
 #define U8G_PROGMEM
@@ -831,8 +841,8 @@ defined(__18CXX) || defined(__PIC32MX)
 #endif
 
 #ifndef U8G_COM_SSD_I2C
-#if defined(__AVR__) || defined(__SAM3X8E__)
-/* AVR variant and also DUE can use the arduino version at the moment */
+#if defined(__AVR__) || defined(__SAM3X8E__) || defined(__XTENSA__)
+/* AVR variant, DUE and ESP8266 can use the arduino version at the moment */
 #define U8G_COM_SSD_I2C u8g_com_arduino_ssd_i2c_fn
 #endif
 #endif

@@ -611,6 +611,166 @@ uint8_t u8g_i2c_wait(uint8_t mask, uint8_t pos)
   return 1;
 }
 
+#elif defined(__XTENSA__)
+
+static void u8g_i2c_set_error(uint8_t code, uint8_t pos)
+{
+  if ( u8g_i2c_err_code > 0 )
+    return;
+  u8g_i2c_err_code |= code;
+  u8g_i2c_err_pos = pos;
+}
+
+#include <Arduino.h>
+
+static unsigned char twi_dcount = 18;
+
+static unsigned char twi_sda, twi_scl;
+
+#define SDA_LOW()   (GPES = (1 << twi_sda)) //Enable SDA (becomes output and since GPO is 0 for the pin, it will pull the line low)
+#define SDA_HIGH()  (GPEC = (1 << twi_sda)) //Disable SDA (becomes input and since it has pullup it will go high)
+#define SDA_READ()  ((GPI & (1 << twi_sda)) != 0)
+#define SCL_LOW()   (GPES = (1 << twi_scl))
+#define SCL_HIGH()  (GPEC = (1 << twi_scl))
+#define SCL_READ()  ((GPI & (1 << twi_scl)) != 0)
+
+#ifndef FCPU80
+#define FCPU80 80000000L
+#endif
+
+#if F_CPU == FCPU80
+#define TWI_CLOCK_STRETCH 800
+#else
+#define TWI_CLOCK_STRETCH 1600
+#endif
+
+static void twi_setClock2(unsigned int freq){
+#if F_CPU == FCPU80
+  if(freq <= 100000) twi_dcount = 19;//about 100KHz
+  else if(freq <= 200000) twi_dcount = 8;//about 200KHz
+  else if(freq <= 300000) twi_dcount = 3;//about 300KHz
+  else if(freq <= 400000) twi_dcount = 1;//about 400KHz
+  else twi_dcount = 1;//about 400KHz
+#else
+  if(freq <= 100000) twi_dcount = 32;//about 100KHz
+  else if(freq <= 200000) twi_dcount = 14;//about 200KHz
+  else if(freq <= 300000) twi_dcount = 8;//about 300KHz
+  else if(freq <= 400000) twi_dcount = 5;//about 400KHz
+  else if(freq <= 500000) twi_dcount = 3;//about 500KHz
+  else if(freq <= 600000) twi_dcount = 2;//about 600KHz
+  else twi_dcount = 1;//about 700KHz
+#endif
+}
+
+static void twi_delay(unsigned char v){
+  unsigned int i;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+  unsigned int reg;
+  for(i=0;i<v;i++) reg = GPI;
+#pragma GCC diagnostic pop
+}
+
+static bool twi_write_start(void) {
+  SCL_HIGH();
+  SDA_HIGH();
+  if (SDA_READ() == 0) return false;
+  twi_delay(twi_dcount);
+  SDA_LOW();
+  twi_delay(twi_dcount);
+  return true;
+}
+
+static bool twi_write_stop(void){
+  unsigned int i = 0;
+  SCL_LOW();
+  SDA_LOW();
+  twi_delay(twi_dcount);
+  SCL_HIGH();
+  while (SCL_READ() == 0 && (i++) < TWI_CLOCK_STRETCH);// Clock stretching (up to 100us)
+  twi_delay(twi_dcount);
+  SDA_HIGH();
+  twi_delay(twi_dcount);
+
+  return true;
+}
+
+static bool twi_write_bit(bool bit) {
+  unsigned int i = 0;
+  SCL_LOW();
+  if (bit) SDA_HIGH();
+  else SDA_LOW();
+  twi_delay(twi_dcount+1);
+  SCL_HIGH();
+  while (SCL_READ() == 0 && (i++) < TWI_CLOCK_STRETCH);// Clock stretching (up to 100us)
+  twi_delay(twi_dcount);
+  return true;
+}
+
+static bool twi_read_bit(void) {
+  unsigned int i = 0;
+  SCL_LOW();
+  SDA_HIGH();
+  twi_delay(twi_dcount+2);
+  SCL_HIGH();
+  while (SCL_READ() == 0 && (i++) < TWI_CLOCK_STRETCH);// Clock stretching (up to 100us)
+  bool bit = SDA_READ();
+  twi_delay(twi_dcount);
+  return bit;
+}
+
+static bool twi_write_byte(unsigned char byte) {
+  unsigned char bit;
+  for (bit = 0; bit < 8; bit++) {
+    twi_write_bit(byte & 0x80);
+    byte <<= 1;
+  }
+  return !twi_read_bit();//NACK/ACK
+}
+
+
+void u8g_i2c_init(uint8_t options) {
+   u8g_i2c_clear_error();
+   u8g_i2c_opt = options;
+
+   twi_sda = SDA;
+   twi_scl = SCL;
+
+   pinMode(twi_sda, INPUT_PULLUP);
+   pinMode(twi_scl, INPUT_PULLUP);
+   if ( u8g_i2c_opt & U8G_I2C_OPT_FAST )
+     twi_setClock2(400000);
+   else
+     twi_setClock2(100000);
+}
+
+uint8_t u8g_i2c_start(uint8_t sla) {
+  if (!twi_write_start() && !(u8g_i2c_opt & U8G_I2C_OPT_NO_ACK)) {
+    u8g_i2c_set_error(U8G_I2C_ERR_BUS, 2);
+    return 0;
+  }
+  if (!twi_write_byte(sla))
+    return 0;
+  return 1;
+}
+
+void u8g_i2c_stop(void) {
+  twi_write_stop();
+}
+
+uint8_t u8g_i2c_send_byte(uint8_t data) {
+  if (!twi_write_byte(data) && !(u8g_i2c_opt & U8G_I2C_OPT_NO_ACK)) {
+    u8g_i2c_set_error(U8G_I2C_ERR_BUS, 3);
+    return 0;
+  }
+  return 1;
+}
+
+uint8_t u8g_i2c_wait(uint8_t mask, uint8_t pos)
+{
+  return 1;
+}
+
 #else
 
 /* empty interface */
