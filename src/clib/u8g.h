@@ -709,6 +709,7 @@ uint8_t u8g_com_raspberrypi_ssd_i2c_fn(u8g_t *u8g, uint8_t msg, uint8_t arg_val,
 
 uint8_t u8g_com_linux_ssd_i2c_fn(u8g_t *u8g, uint8_t msg, uint8_t arg_val, void *arg_ptr);             /* u8g_com_linux_ssd_i2c.c */
 
+uint8_t u8g_com_stm32_st7920_hw_spi_fn(u8g_t *u8g, uint8_t msg, uint8_t arg_val, void *arg_ptr);       /* u8g_com_stm32_st7920_hw_spi.c */
 uint8_t u8g_com_stm32_ssd_i2c_fn(u8g_t *u8g, uint8_t msg, uint8_t arg_val, void *arg_ptr);             /* u8g_com_stm32_ssd_i2c.c */
 
 uint8_t u8g_com_psoc5_ssd_hw_spi_fn(u8g_t *u8g, uint8_t msg, uint8_t arg_val, void *arg_ptr);   /* u8g_com_psoc5_ssd_hw_spi.c */
@@ -731,172 +732,171 @@ defined(__18CXX) || defined(__PIC32MX)
 
 /* ==== HW SPI, msp430  ====*/
 #if defined(__MSP430__)
-#define U8G_COM_HW_SPI u8g_com_msp430_hw_spi_fn
-#define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
+ #define U8G_COM_HW_SPI u8g_com_msp430_hw_spi_fn
+ #define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
 #endif
 
 /* ==== HW SPI, Raspberry PI ====*/
 #if defined(U8G_RASPBERRY_PI)
-#define U8G_COM_HW_SPI u8g_com_raspberrypi_hw_spi_fn
-#define U8G_COM_SW_SPI u8g_com_null_fn
+ #define U8G_COM_HW_SPI u8g_com_raspberrypi_hw_spi_fn
+ #define U8G_COM_SW_SPI u8g_com_null_fn
 
 /* I'm sure there must be some mad reason for needing this */
-#define U8G_COM_ST7920_SW_SPI u8g_com_null_fn
-#define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
+ #define U8G_COM_ST7920_SW_SPI u8g_com_null_fn
+ #define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
 #endif
 
 /* ==== HW SPI, Arduino ====*/
 #if defined(ARDUINO)
-#if defined(__AVR__)
+ #if defined(__AVR__)
+  #if defined(__AVR_ATtiny85__)
+   #define U8G_COM_HW_SPI u8g_com_arduino_ATtiny85_std_hw_spi_fn
+   #define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
+  #else
+   #define U8G_COM_HW_SPI u8g_com_arduino_hw_spi_fn
+   #if defined(__AVR_ATmega32U4__)
+    #define U8G_COM_HW_USART_SPI u8g_com_arduino_hw_usart_spi_fn
+   #endif /* __AVR_ATmega32U4__ */
+   #define U8G_COM_ST7920_HW_SPI u8g_com_arduino_st7920_hw_spi_fn
+  #endif /* __AVR_ATtiny85__ */
+ #elif defined(__18CXX) || defined(__PIC32MX)
+  #define U8G_COM_HW_SPI u8g_com_null_fn
+  #define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
+ #elif defined(__SAM3X8E__)   /* Arduino Due */
+  #define U8G_COM_HW_SPI u8g_com_arduino_hw_spi_fn
+  #define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
+ #elif defined(ARDUINO_ARCH_STM32)
+  #define U8G_COM_HW_SPI u8g_com_null_fn
+  #define U8G_COM_ST7920_HW_SPI u8g_com_stm32_st7920_hw_spi_fn
+ #endif // __AVR__
+#endif // ARDUINO
 
-#if defined(__AVR_ATtiny85__)
-#define U8G_COM_HW_SPI u8g_com_arduino_ATtiny85_std_hw_spi_fn
-#define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
-#else
-
-#define U8G_COM_HW_SPI u8g_com_arduino_hw_spi_fn
-#if defined(__AVR_ATmega32U4__)
-#define U8G_COM_HW_USART_SPI u8g_com_arduino_hw_usart_spi_fn
-#endif /* __AVR_ATmega32U4__ */
-#define U8G_COM_ST7920_HW_SPI u8g_com_arduino_st7920_hw_spi_fn
-#endif /* __AVR_ATtiny85__ */
-
-#elif defined(__18CXX) || defined(__PIC32MX)
-#define U8G_COM_HW_SPI u8g_com_null_fn
-#define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
-#elif defined(__SAM3X8E__)   /* Arduino Due */
-#define U8G_COM_HW_SPI u8g_com_arduino_hw_spi_fn
-#define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
-#endif
-#endif
 /* ==== HW SPI, not Arduino ====*/
 #ifndef U8G_COM_HW_SPI
-#if defined(__AVR_XMEGA__)
-#define U8G_COM_HW_SPI u8g_com_atxmega_hw_spi_fn
-#define U8G_COM_ST7920_HW_SPI u8g_com_atxmega_st7920_hw_spi_fn
-#elif defined(__AVR__)
-#define U8G_COM_HW_SPI u8g_com_atmega_hw_spi_fn
-#define U8G_COM_ST7920_HW_SPI u8g_com_atmega_st7920_hw_spi_fn
-#endif
-#endif
-#ifndef U8G_COM_HW_SPI
-#define U8G_COM_HW_SPI u8g_com_null_fn
-#define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
-#endif
-#ifndef U8G_COM_HW_USART_SPI
-#define U8G_COM_HW_USART_SPI u8g_com_null_fn
+ #if defined(__AVR_XMEGA__)
+  #define U8G_COM_HW_SPI u8g_com_atxmega_hw_spi_fn
+  #define U8G_COM_ST7920_HW_SPI u8g_com_atxmega_st7920_hw_spi_fn
+ #elif defined(__AVR__)
+  #define U8G_COM_HW_SPI u8g_com_atmega_hw_spi_fn
+  #define U8G_COM_ST7920_HW_SPI u8g_com_atmega_st7920_hw_spi_fn
+ #endif
 #endif
 
+#ifndef U8G_COM_HW_SPI
+  #define U8G_COM_HW_SPI u8g_com_null_fn
+  #define U8G_COM_ST7920_HW_SPI u8g_com_null_fn
+#endif
+
+#ifndef U8G_COM_HW_USART_SPI
+  #define U8G_COM_HW_USART_SPI u8g_com_null_fn
+#endif
 
 /* ==== SW SPI, Arduino ====*/
 #if defined(ARDUINO)
-#if defined(__AVR__)
-#define U8G_COM_SW_SPI u8g_com_arduino_sw_spi_fn
-#define U8G_COM_ST7920_SW_SPI u8g_com_arduino_st7920_spi_fn
-#elif defined(__18CXX) || defined(__PIC32MX)
-#define U8G_COM_SW_SPI u8g_com_arduino_sw_spi_fn
-#define U8G_COM_ST7920_SW_SPI u8g_com_arduino_st7920_spi_fn
-#elif defined(__SAM3X8E__)   /* Arduino Due */
-//#define U8G_COM_SW_SPI u8g_com_arduino_std_sw_spi_fn
-#define U8G_COM_SW_SPI u8g_com_arduino_sw_spi_fn
-#define U8G_COM_ST7920_SW_SPI u8g_com_arduino_st7920_spi_fn
-#elif defined(__arm__)   /* Teensy */
-#define U8G_COM_SW_SPI u8g_com_arduino_std_sw_spi_fn
-#define U8G_COM_ST7920_SW_SPI u8g_com_arduino_st7920_spi_fn
-#endif
+ #if defined(__AVR__)
+  #define U8G_COM_SW_SPI u8g_com_arduino_sw_spi_fn
+  #define U8G_COM_ST7920_SW_SPI u8g_com_arduino_st7920_spi_fn
+ #elif defined(__18CXX) || defined(__PIC32MX)
+  #define U8G_COM_SW_SPI u8g_com_arduino_sw_spi_fn
+  #define U8G_COM_ST7920_SW_SPI u8g_com_arduino_st7920_spi_fn
+ #elif defined(__SAM3X8E__)   /* Arduino Due */
+  //#define U8G_COM_SW_SPI u8g_com_arduino_std_sw_spi_fn
+  #define U8G_COM_SW_SPI u8g_com_arduino_sw_spi_fn
+  #define U8G_COM_ST7920_SW_SPI u8g_com_arduino_st7920_spi_fn
+ #elif defined(__arm__)   /* Teensy */
+  #define U8G_COM_SW_SPI u8g_com_arduino_std_sw_spi_fn
+  #define U8G_COM_ST7920_SW_SPI u8g_com_arduino_st7920_spi_fn
+ #endif
 #endif
 
 #ifndef U8G_COM_SW_SPI
 /* ==== SW SPI, not Arduino ====*/
-
 /* ==== SW SPI, msp430  ====*/
-#if defined(__MSP430__)
-#define U8G_COM_SW_SPI u8g_com_std_sw_spi_fn
-#define U8G_COM_ST7920_SW_SPI u8g_com_null_fn
+ #if defined(__MSP430__)
+  #define U8G_COM_SW_SPI u8g_com_std_sw_spi_fn
+  #define U8G_COM_ST7920_SW_SPI u8g_com_null_fn
+ #endif
+
+ #if defined(__AVR__)
+  #define U8G_COM_SW_SPI u8g_com_atmega_sw_spi_fn
+  #define U8G_COM_ST7920_SW_SPI u8g_com_atmega_st7920_sw_spi_fn
+ #endif
 #endif
 
-#if defined(__AVR__)
-#define U8G_COM_SW_SPI u8g_com_atmega_sw_spi_fn
-#define U8G_COM_ST7920_SW_SPI u8g_com_atmega_st7920_sw_spi_fn
-#endif
-#endif
 #ifndef U8G_COM_SW_SPI
-#define U8G_COM_SW_SPI u8g_com_null_fn
-#define U8G_COM_ST7920_SW_SPI u8g_com_null_fn
+ #define U8G_COM_SW_SPI u8g_com_null_fn
+ #define U8G_COM_ST7920_SW_SPI u8g_com_null_fn
 #endif
 
 /* ==== Parallel interface, Arduino ====*/
 #if defined(ARDUINO)
-#if defined(__AVR__)
-#define U8G_COM_PARALLEL u8g_com_arduino_parallel_fn
-#define U8G_COM_FAST_PARALLEL u8g_com_arduino_fast_parallel_fn
-#define U8G_COM_T6963  u8g_com_arduino_t6963_fn
-#else /* Arduino Due, Chipkit PIC32 */
-#define U8G_COM_PARALLEL u8g_com_arduino_parallel_fn
-#define U8G_COM_FAST_PARALLEL u8g_com_arduino_parallel_fn
-#define U8G_COM_T6963  u8g_com_null_fn
-#endif
-#endif
-#ifndef U8G_COM_PARALLEL
-#if defined(__AVR__)
-#define U8G_COM_PARALLEL u8g_com_atmega_parallel_fn
-#define U8G_COM_FAST_PARALLEL u8g_com_atmega_parallel_fn
-#define U8G_COM_T6963  u8g_com_null_fn
-#endif
+ #if defined(__AVR__)
+  #define U8G_COM_PARALLEL u8g_com_arduino_parallel_fn
+  #define U8G_COM_FAST_PARALLEL u8g_com_arduino_fast_parallel_fn
+  #define U8G_COM_T6963  u8g_com_arduino_t6963_fn
+ #else /* Arduino Due, Chipkit PIC32 */
+  #define U8G_COM_PARALLEL u8g_com_arduino_parallel_fn
+  #define U8G_COM_FAST_PARALLEL u8g_com_arduino_parallel_fn
+  #define U8G_COM_T6963  u8g_com_null_fn
+ #endif
 #endif
 #ifndef U8G_COM_PARALLEL
-#define U8G_COM_PARALLEL u8g_com_null_fn
-#define U8G_COM_FAST_PARALLEL u8g_com_null_fn
-#define U8G_COM_T6963  u8g_com_null_fn
+ #if defined(__AVR__)
+  #define U8G_COM_PARALLEL u8g_com_atmega_parallel_fn
+  #define U8G_COM_FAST_PARALLEL u8g_com_atmega_parallel_fn
+  #define U8G_COM_T6963  u8g_com_null_fn
+ #endif
+#endif
+#ifndef U8G_COM_PARALLEL
+ #define U8G_COM_PARALLEL u8g_com_null_fn
+ #define U8G_COM_FAST_PARALLEL u8g_com_null_fn
+ #define U8G_COM_T6963  u8g_com_null_fn
 #endif
 
 #if defined(ARDUINO)
-#if defined(__AVR__)
-#define U8G_COM_SSD_I2C u8g_com_arduino_ssd_i2c_fn
-#define U8G_COM_UC_I2C u8g_com_arduino_uc_i2c_fn
-#endif
-#endif
-
-#ifndef U8G_COM_SSD_I2C
-#if defined(__AVR__) || defined(__SAM3X8E__)
-/* AVR variant and also DUE can use the arduino version at the moment */
-#define U8G_COM_SSD_I2C u8g_com_arduino_ssd_i2c_fn
-#endif
+ #if defined(__AVR__)
+  #define U8G_COM_SSD_I2C u8g_com_arduino_ssd_i2c_fn
+  #define U8G_COM_UC_I2C u8g_com_arduino_uc_i2c_fn
+ #elif defined(ARDUINO_ARCH_STM32)
+  #define U8G_COM_SSD_I2C u8g_com_stm32_ssd_i2c_fn
+ #endif
 #endif
 
 #ifndef U8G_COM_SSD_I2C
-#if defined(U8G_RASPBERRY_PI)
-#define U8G_COM_SSD_I2C u8g_com_raspberrypi_ssd_i2c_fn
+ #if defined(__AVR__) || defined(__SAM3X8E__)
+  /* AVR variant and also DUE can use the arduino version at the moment */
+  #define U8G_COM_SSD_I2C u8g_com_arduino_ssd_i2c_fn
+ #endif
 #endif
+
+#ifndef U8G_COM_SSD_I2C
+ #if defined(U8G_RASPBERRY_PI)
+  #define U8G_COM_SSD_I2C u8g_com_raspberrypi_ssd_i2c_fn
+ #endif
 #endif
 #ifndef U8G_COM_SSD_I2C
-#if defined(U8G_LINUX)
-#define U8G_COM_SSD_I2C u8g_com_linux_ssd_i2c_fn
-#endif
-#endif
-#ifndef U8G_COM_SSD_I2C
-#if defined(ARDUINO_ARCH_STM32)
-#define U8G_COM_SSD_I2C u8g_com_stm32_ssd_i2c_fn
-#endif
+ #if defined(U8G_LINUX)
+  #define U8G_COM_SSD_I2C u8g_com_linux_ssd_i2c_fn
+ #endif
 #endif
 
 #if defined(U8G_CYPRESS_PSOC5)
-#define U8G_COM_HW_SPI u8g_com_psoc5_ssd_hw_spi_fn
-#define U8G_COM_FAST_PARALLEL u8g_com_psoc5_ssd_hw_parallel_fn
+ #define U8G_COM_HW_SPI u8g_com_psoc5_ssd_hw_spi_fn
+ #define U8G_COM_FAST_PARALLEL u8g_com_psoc5_ssd_hw_parallel_fn
 #endif
 
 #ifndef U8G_COM_SSD_I2C
-#define U8G_COM_SSD_I2C u8g_com_null_fn
+ #define U8G_COM_SSD_I2C u8g_com_null_fn
 #endif
 
 #ifndef U8G_COM_UC_I2C
-#if defined(__AVR__)
-/* AVR variant can use the arduino version at the moment */
-#define U8G_COM_UC_I2C u8g_com_arduino_uc_i2c_fn
-#endif
+ #if defined(__AVR__)
+  /* AVR variant can use the arduino version at the moment */
+  #define U8G_COM_UC_I2C u8g_com_arduino_uc_i2c_fn
+ #endif
 #endif
 #ifndef U8G_COM_UC_I2C
-#define U8G_COM_UC_I2C u8g_com_null_fn
+ #define U8G_COM_UC_I2C u8g_com_null_fn
 #endif
 
 

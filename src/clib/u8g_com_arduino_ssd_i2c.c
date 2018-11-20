@@ -56,7 +56,6 @@
 
 #if defined(U8G_WITH_PINLIST)
 
-
 #define I2C_SLA         (0x3c*2)
 //#define I2C_CMD_MODE  0x080
 #define I2C_CMD_MODE    0x000
